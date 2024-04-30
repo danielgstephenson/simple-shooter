@@ -1,1 +1,134 @@
-<canvas/>
+<style>
+html {
+  background-color: rgb(50,50,50);
+}
+</style>
+<canvas id='canvas' width="800" height="450"/>
+<script>
+const canvas = document.getElementById('canvas')
+const context = canvas.getContext('2d')
+
+const radius = 20
+const bulletRadius = 5
+const playerSpeed = 3
+const bulletSpeed = 5
+const enemySpeed = 0.5
+
+let x1 = 200
+let x2 = 600
+let score1 = 0
+let score2 = 0
+let left1 = false
+let right1 = false
+let left2 = false
+let right2 = false
+let bullets = []
+let enemies = []
+
+function addEnemy() {
+  enemies.push({
+    x: radius + Math.random()*(800-radius),
+    y: -radius,
+    alive: true,
+    speedX: (2*Math.random() - 1)*enemySpeed
+  })
+}
+
+function restart() {
+  enemies = []
+  bullets = []
+  score1 = 0
+  score2 = 0
+  addEnemy()
+}
+
+function getDistance(x1,y1,x2,y2) {
+  const dx = x2-x1a
+  const dy = y2-y1
+  return Math.sqrt(dx*dx + dy*dy)
+}
+
+function update() {
+  if(left1 && x1 > radius) x1 -= playerSpeed
+  if(right1 && x1 < 800-radius) x1 += playerSpeed
+  if(left2 && x2 > radius) x2 -= playerSpeed
+  if(right2 && x2 < 800-radius) x2 += playerSpeed
+  context.fillStyle = 'black'
+  context.fillRect(0,0,canvas.width,canvas.height)
+  context.fillStyle = 'blue'
+  context.beginPath()
+  context.arc(x1,450-radius,radius,0,2 * Math.PI)
+  context.fill()
+  context.font = '50px Arial'
+  context.fillText(score1,200,225)
+  context.fillStyle = 'rgb(0,150,0)'
+  context.beginPath()
+  context.arc(x2,450-radius,radius,0,2 * Math.PI)
+  context.fill()
+  context.font = '50px Arial'
+  context.fillText(score2,400,225)
+  bullets.forEach(bullet => {
+    bullet.y -= bulletSpeed
+    context.fillStyle = 'white'
+    context.beginPath()
+    context.arc(bullet.x,bullet.y,bulletRadius,0,2 * Math.PI)
+    context.fill()
+  })
+  enemies.forEach(enemy => {
+    if(enemy.alive) {
+      enemy.y += enemySpeed
+      enemy.x += enemy.speedX
+      if(enemy.x < radius) enemy.speedX = Math.random()*enemySpeed
+      if(enemy.x > 800-radius) enemy.speedX = -Math.random()*enemySpeed
+      context.fillStyle = 'red'
+      context.beginPath()
+      context.arc(enemy.x,enemy.y,radius,0,2 * Math.PI)
+      context.fill()
+      bullets.forEach(bullet => {
+        const distance = getDistance(bullet.x,bullet.y,enemy.x,enemy.y)
+        if(distance < radius+bulletRadius) {
+          enemy.alive = false
+          if(bullet.player===1) score1 += 1
+          if(bullet.player===2) score2 += 1
+          addEnemy()
+          if(Math.random() < 0.2) addEnemy()
+        }
+      })
+      if(enemy.y >= 450 - radius) {
+        enemy.alive = false
+        restart()
+      }
+    }
+  })
+}
+
+addEnemy()
+setInterval(update, 10)
+document.addEventListener("keydown",(event) => {
+  if(event.key==="a") left1 = true
+  if(event.key==="d") right1 = true
+  if(event.key==="w" ) {
+    bullets.push({
+      x: x1,
+      y: 450-2*radius-bulletRadius,
+      player: 1
+    })
+  }
+  if(event.key==="ArrowLeft") left2 = true
+  if(event.key==="ArrowRight") right2 = true
+  if(event.key==="ArrowUp" ) {
+    bullets.push({
+      x: x2,
+      y: 450-2*radius-bulletRadius,
+      player: 2
+    })
+  }
+  console.log(event)
+})
+document.addEventListener("keyup",(event) => {
+  if(event.key==="a") left1 = false
+  if(event.key==="d") right1 = false
+  if(event.key==="ArrowLeft") left2 = false
+  if(event.key==="ArrowRight") right2 = false
+})
+</script>
